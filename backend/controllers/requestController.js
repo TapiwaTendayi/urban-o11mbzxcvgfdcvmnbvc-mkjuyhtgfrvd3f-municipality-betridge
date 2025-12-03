@@ -69,24 +69,38 @@ export const assignRequest = async (req, res) => {
 };
 
 /* ============================================================
-   STUDENT MARKS RESOLVED
+   OFFICE USER MARKS THEIR OWN REQUEST AS RESOLVED
+   (Modified: Previously student-only, now office-only)
 ============================================================ */
 export const markResolved = async (req, res) => {
   try {
     const { requestId } = req.body;
 
+    // Get current user
+    const currentUser = await User.findById(req.user.id);
+
+    // Only office users can resolve requests
+    if (currentUser.role !== "office") {
+      return res.status(403).json({
+        message: "Only office users can mark requests as resolved",
+      });
+    }
+
     const request = await Request.findById(requestId);
     if (!request) return res.status(404).json({ message: "Request not found" });
 
-    // only assigned student can resolve
-    if (request.assignedTo?.toString() !== req.user.id)
-      return res
-        .status(403)
-        .json({ message: "This request is not assigned to you" });
+    // Check if current office user is the one who created the request
+    if (request.requestedBy.toString() !== req.user.id) {
+      return res.status(403).json({
+        message: "You can only resolve requests that you created",
+      });
+    }
 
+    // Update request status
     request.status = "resolved";
     request.resolvedAt = new Date();
-    request.resolvedByStudent = req.user.id;
+    // Changed from resolvedByStudent to resolvedByOffice
+    request.resolvedByOffice = req.user.id;
 
     await request.save();
 
@@ -94,10 +108,10 @@ export const markResolved = async (req, res) => {
       .populate("requestedBy", "name office email")
       .populate("assignedTo", "name email")
       .populate("assignedBy", "name email")
-      .populate("resolvedByStudent", "name email");
+      .populate("resolvedByOffice", "name email");
 
     return res.json({
-      message: "Request resolved",
+      message: "Request marked as resolved",
       request: updated,
     });
   } catch (err) {
@@ -108,6 +122,7 @@ export const markResolved = async (req, res) => {
 
 /* ============================================================
    ROLE-BASED REQUEST LISTING
+   (Updated: Office users don't see assignedTo information)
 ============================================================ */
 export const getRequests = async (req, res) => {
   try {
@@ -115,36 +130,35 @@ export const getRequests = async (req, res) => {
 
     let requests = [];
 
-    // Supervisor sees all
+    // Supervisor sees all (with full details)
     if (user.role === "supervisor") {
       requests = await Request.find()
         .populate("requestedBy", "name office email")
         .populate("assignedTo", "name email")
         .populate("assignedBy", "name email")
-        .populate("resolvedByStudent", "name email")
+        .populate("resolvedByOffice", "name email")
         .sort({ createdAt: -1 });
 
       return res.json(requests);
     }
 
-    // Student sees all (but can only resolve assigned ones)
+    // Student sees all (read-only view with assignment info)
     if (user.role === "student") {
       requests = await Request.find()
         .populate("requestedBy", "name office email")
         .populate("assignedTo", "name email")
         .populate("assignedBy", "name email")
-        .populate("resolvedByStudent", "name email")
+        .populate("resolvedByOffice", "name email")
         .sort({ createdAt: -1 });
 
       return res.json(requests);
     }
 
-    // Office sees only their own
+    // Office sees only their own requests WITHOUT assignment details
     if (user.role === "office") {
       requests = await Request.find({ requestedBy: user._id })
-        .populate("assignedTo", "name email")
-        .populate("assignedBy", "name email")
-        .populate("resolvedByStudent", "name email")
+        .select("-assignedTo -assignedBy") // EXCLUDE assignment fields
+        .populate("resolvedByOffice", "name email")
         .sort({ createdAt: -1 });
 
       return res.json(requests);

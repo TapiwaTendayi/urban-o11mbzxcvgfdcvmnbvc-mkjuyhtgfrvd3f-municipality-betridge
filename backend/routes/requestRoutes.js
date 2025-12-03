@@ -16,7 +16,8 @@ router.post("/create", protect, createRequest);
 // Supervisor assigns request
 router.post("/assign", protect, supervisorOnly, assignRequest);
 
-// Student resolves request
+// Office resolves request (changed from student-only to general protect)
+// The controller now checks if user is office and original requester
 router.post("/resolve", protect, markResolved);
 
 // All roles fetch requests (filtered)

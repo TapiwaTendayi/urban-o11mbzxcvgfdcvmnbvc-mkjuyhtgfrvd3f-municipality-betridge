@@ -19,7 +19,11 @@ export default function OfficeDashboard() {
       const res = await axios.get("http://localhost:5000/api/requests", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setRequests(res.data);
+      // Filter to show only requests created by this office user
+      const myRequests = res.data.filter(
+        (r) => r.requestedBy && r.requestedBy._id === user?.id
+      );
+      setRequests(myRequests);
     } catch (err) {
       console.error("Fetch error:", err);
       toast.error("Failed to load requests");
@@ -30,7 +34,7 @@ export default function OfficeDashboard() {
     if (!token) return navigate("/login");
     fetchRequests();
     // eslint-disable-next-line
-  }, []);
+  }, [user]);
 
   const createRequest = async (e) => {
     e.preventDefault();
@@ -50,6 +54,27 @@ export default function OfficeDashboard() {
     } catch (err) {
       console.error("Create error:", err.response?.data || err.message);
       toast.error("Failed to create request", { id: toastId });
+    }
+  };
+
+  // Function to mark request as resolved
+  const markResolved = async (requestId) => {
+    const toastId = toast.loading("Marking as resolved...");
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/requests/resolve",
+        { requestId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(res.data.message || "Request marked as resolved", {
+        id: toastId,
+      });
+      fetchRequests(); // Refresh the list
+    } catch (err) {
+      console.error("Resolve error:", err.response?.data || err.message);
+      toast.error(err.response?.data?.message || "Failed to mark as resolved", {
+        id: toastId,
+      });
     }
   };
 
@@ -105,7 +130,7 @@ export default function OfficeDashboard() {
         </button>
       </form>
 
-      <h2 className="text-xl font-bold mb-3">Requests</h2>
+      <h2 className="text-xl font-bold mb-3">My Requests</h2>
       <table className="w-full bg-white rounded-lg shadow-md">
         <thead>
           <tr className="bg-gray-200">
@@ -113,6 +138,7 @@ export default function OfficeDashboard() {
             <th className="p-2">Description</th>
             <th className="p-2">Status</th>
             <th className="p-2">Created</th>
+            <th className="p-2">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -124,6 +150,17 @@ export default function OfficeDashboard() {
                 {r.status === "resolved" ? "✅ Resolved" : "❌ Pending"}
               </td>
               <td className="p-2">{new Date(r.createdAt).toLocaleString()}</td>
+              <td className="p-2">
+                {/* Show resolve button only if pending */}
+                {r.status !== "resolved" && (
+                  <button
+                    onClick={() => markResolved(r._id)}
+                    className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                  >
+                    ✅ Mark Resolved
+                  </button>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

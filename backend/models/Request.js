@@ -27,16 +27,17 @@ const RequestSchema = new mongoose.Schema(
       default: null,
     },
 
-    // single global status (student resolves -> becomes "resolved")
+    // single global status (office resolves -> becomes "resolved")
     status: {
       type: String,
       enum: ["pending", "resolved"],
       default: "pending",
     },
 
-    // resolved info (set when a student resolves)
+    // resolved info (set when an office user resolves)
     resolvedAt: { type: Date, default: null },
-    resolvedByStudent: {
+    resolvedByOffice: {
+      // CHANGED from resolvedByStudent
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,

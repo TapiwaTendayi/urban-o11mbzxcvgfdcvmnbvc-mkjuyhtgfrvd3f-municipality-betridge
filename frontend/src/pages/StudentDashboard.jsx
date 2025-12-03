@@ -9,13 +9,13 @@ export default function StudentDashboard() {
   const [requests, setRequests] = useState([]);
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user") || "null");
 
   const fetchRequests = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/requests", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      // SHOW ALL REQUESTS (not filtering by assignment)
       setRequests(res.data);
     } catch (err) {
       console.error(err);
@@ -27,22 +27,6 @@ export default function StudentDashboard() {
     if (!token) return navigate("/login");
     fetchRequests();
   }, []);
-
-  const markResolved = async (id) => {
-    const toastId = toast.loading("Marking resolved...");
-    try {
-      const res = await axios.post(
-        "http://localhost:5000/api/requests/resolve",
-        { requestId: id },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success(res.data.message || "Marked resolved", { id: toastId });
-      fetchRequests();
-    } catch (err) {
-      console.error("Resolve error:", err.response?.data || err.message);
-      toast.error("Failed to mark resolved", { id: toastId });
-    }
-  };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -69,47 +53,34 @@ export default function StudentDashboard() {
         </div>
       </div>
 
+      <p className="mb-4 text-gray-600">
+        View all IT requests. Only the office user who created a request can
+        mark it as resolved.
+      </p>
+
       <table className="w-full border">
         <thead>
           <tr className="bg-gray-200">
             <th>Title</th>
             <th>Description</th>
-            <th>Requested By</th>
+            <th>Requested By (Office)</th>
             <th>Assigned To</th>
             <th>Status</th>
             <th>Created</th>
-            <th>Action</th>
+            {/* No Action column - students cannot resolve */}
           </tr>
         </thead>
         <tbody>
-          {requests.map((r) => {
-            const isAssignedToMe =
-              r.assignedTo && r.assignedTo._id === (user?.id || user?._id);
-            return (
-              <tr key={r._id} className="border-t text-center">
-                <td>{r.title}</td>
-                <td>{r.description}</td>
-                <td>{r.requestedBy?.name || "—"}</td>
-                <td>{r.assignedTo?.name || "Unassigned"}</td>
-                <td>
-                  {r.status === "resolved" ? "✅ Resolved" : "❌ Pending"}
-                </td>
-                <td>{new Date(r.createdAt).toLocaleString()}</td>
-                <td>
-                  {r.status !== "resolved" && isAssignedToMe ? (
-                    <button
-                      onClick={() => markResolved(r._id)}
-                      className="bg-green-600 text-white px-2 py-1 rounded"
-                    >
-                      ✅ Resolve
-                    </button>
-                  ) : (
-                    <span className="text-gray-400">—</span>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
+          {requests.map((r) => (
+            <tr key={r._id} className="border-t text-center">
+              <td>{r.title}</td>
+              <td>{r.description}</td>
+              <td>{r.requestedBy?.name || "—"}</td>
+              <td>{r.assignedTo?.name || "Not assigned"}</td>
+              <td>{r.status === "resolved" ? "✅ Resolved" : "❌ Pending"}</td>
+              <td>{new Date(r.createdAt).toLocaleString()}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
