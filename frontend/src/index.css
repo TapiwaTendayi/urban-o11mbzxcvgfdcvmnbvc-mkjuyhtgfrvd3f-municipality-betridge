@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* Smooth fonts */
+body {
+  @apply bg-gray-100 text-gray-800 antialiased;
+}
+
+/* Card container */
+.card {
+  @apply bg-white p-6 rounded-lg shadow-md;
+}
+
+/* Page titles */
+.page-title {
+  @apply text-2xl font-semibold mb-6 flex items-center gap-2;
+}
+
+/* Buttons */
+.btn {
+  @apply px-4 py-2 rounded font-medium transition;
+}
+
+.btn-primary {
+  @apply bg-blue-600 text-white hover:bg-blue-700;
+}
+
+.btn-danger {
+  @apply bg-red-600 text-white hover:bg-red-700;
+}
+
+.btn-secondary {
+  @apply bg-gray-600 text-white hover:bg-gray-700;
+}
+
+/* Inputs */
+.input {
+  @apply border rounded px-3 py-2 w-full mb-3;
+}
+
+/* Table */
+.table {
+  @apply w-full bg-white rounded-lg shadow;
+}
+
+.table th {
+  @apply bg-gray-100 text-left px-3 py-2;
+}
+
+.table td {
+  @apply border-t px-3 py-2;
+}
