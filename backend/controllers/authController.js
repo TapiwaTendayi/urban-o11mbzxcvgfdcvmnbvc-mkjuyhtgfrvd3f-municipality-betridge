@@ -47,6 +47,63 @@ export const register = async (req, res) => {
 };
 
 /* ============================================================
+   UPDATE USER (Supervisor-only)
+============================================================ */
+export const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, role, office, password } = req.body;
+
+    // 🔒 Only supervisors can update users
+    if (req.user.role !== "supervisor") {
+      return res.status(403).json({
+        message: "Access denied — supervisors only",
+      });
+    }
+
+    // Find user
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if email is being changed and if it already exists
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already in use" });
+      }
+      user.email = email;
+    }
+
+    // Update other fields
+    if (name) user.name = name;
+    if (role) user.role = role;
+    if (office !== undefined) user.office = office;
+
+    // Update password if provided
+    if (password && password.trim() !== "") {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      user.password = hashedPassword;
+    }
+
+    await user.save();
+
+    // Return user without password
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    return res.json({
+      message: "User updated successfully",
+      user: userResponse,
+    });
+  } catch (error) {
+    console.error("❌ Update user error:", error);
+    return res.status(500).json({ message: "Server error updating user" });
+  }
+};
+
+/* ============================================================
    LOGIN
 ============================================================ */
 export const login = async (req, res) => {
@@ -145,3 +202,4 @@ export const updatePassword = async (req, res) => {
     return res.status(500).json({ message: "Server error updating password" });
   }
 };
+// At the end of authController.js, NO export statement needed - using individual exports

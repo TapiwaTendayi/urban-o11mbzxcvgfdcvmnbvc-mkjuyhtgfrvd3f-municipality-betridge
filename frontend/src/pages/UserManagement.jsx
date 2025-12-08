@@ -1,3 +1,4 @@
+// frontend/src/pages/UserManagement.jsx
 import { useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -13,7 +14,7 @@ export default function UserManagement() {
     password: "",
     confirmPassword: "",
   });
-
+  const [editingUserId, setEditingUserId] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
@@ -35,33 +36,100 @@ export default function UserManagement() {
     // eslint-disable-next-line
   }, []);
 
-  const handleCreateUser = async (e) => {
+  const startEditUser = (user) => {
+    setEditingUserId(user._id);
+    setForm({
+      name: user.name || "",
+      email: user.email || "",
+      role: user.role || "office",
+      office: user.office || "",
+      password: "", // Leave password empty for editing
+      confirmPassword: "",
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingUserId(null);
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setForm({
+      name: "",
+      email: "",
+      role: "office",
+      office: "",
+      password: "",
+      confirmPassword: "",
+    });
+    setEditingUserId(null);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (form.password !== form.confirmPassword) {
+    // Validate passwords
+    if (!editingUserId && form.password !== form.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    if (
+      editingUserId &&
+      form.password &&
+      form.password !== form.confirmPassword
+    ) {
       toast.error("Passwords do not match");
       return;
     }
 
     try {
-      const id = toast.loading("Creating user...");
-      await axios.post("http://localhost:5000/api/auth/register", form, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      toast.dismiss(id);
-      toast.success("User created successfully");
-      setForm({
-        name: "",
-        email: "",
-        role: "office",
-        office: "",
-        password: "",
-        confirmPassword: "",
-      });
+      const toastId = toast.loading(
+        editingUserId ? "Updating user..." : "Creating user..."
+      );
+
+      // Prepare data
+      const userData = {
+        name: form.name,
+        email: form.email,
+        role: form.role,
+        office: form.role === "student" ? "" : form.office,
+      };
+
+      // Only include password if provided
+      if (form.password && form.password.trim() !== "") {
+        userData.password = form.password;
+      }
+
+      if (editingUserId) {
+        // UPDATE existing user
+        await axios.put(
+          `http://localhost:5000/api/auth/users/${editingUserId}`,
+          userData,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success("User updated successfully", { id: toastId });
+      } else {
+        // CREATE new user
+        if (!form.password) {
+          toast.error("Password is required for new users", { id: toastId });
+          return;
+        }
+        await axios.post("http://localhost:5000/api/auth/register", userData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        toast.success("User created successfully", { id: toastId });
+      }
+
       fetchUsers();
+      resetForm();
     } catch (err) {
-      console.error("Create user error:", err.response?.data);
-      toast.error(err.response?.data?.message || "Error creating user");
+      console.error("Submit error:", err.response?.data);
+      toast.error(
+        err.response?.data?.message ||
+          (editingUserId ? "Error updating user" : "Error creating user"),
+        { id: toastId }
+      );
     }
   };
 
@@ -87,25 +155,30 @@ export default function UserManagement() {
       <h1 className="text-xl font-bold mb-4">Manage Users</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Create User Form */}
+        {/* Create/Edit User Form */}
         <form
-          onSubmit={handleCreateUser}
+          onSubmit={handleSubmit}
           className="bg-white p-4 rounded shadow w-full"
         >
-          <h2 className="font-bold text-lg mb-3">Create New User</h2>
+          <h2 className="font-bold text-lg mb-3">
+            {editingUserId ? "✏️ Edit User" : "➕ Create New User"}
+          </h2>
 
           <input
             className="border p-2 w-full mb-2 rounded"
             placeholder="Name"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
+            required
           />
 
           <input
             className="border p-2 w-full mb-2 rounded"
             placeholder="Email"
+            type="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
+            required
           />
 
           <select
@@ -129,10 +202,11 @@ export default function UserManagement() {
 
           <input
             className="border p-2 w-full mb-2 rounded"
-            placeholder="Password"
+            placeholder={editingUserId ? "New Password (optional)" : "Password"}
             type={showPassword ? "text" : "password"}
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
+            required={!editingUserId}
           />
 
           <input
@@ -143,6 +217,7 @@ export default function UserManagement() {
             onChange={(e) =>
               setForm({ ...form, confirmPassword: e.target.value })
             }
+            required={!editingUserId}
           />
 
           <label className="flex items-center gap-2 mb-3">
@@ -155,8 +230,27 @@ export default function UserManagement() {
           </label>
 
           <div className="flex gap-2">
-            <button className="bg-blue-600 text-white px-4 py-2 rounded">
-              Create User
+            <button
+              type="submit"
+              className="bg-green-600 text-white px-4 py-2 rounded"
+            >
+              {editingUserId ? "Update User" : "Create User"}
+            </button>
+            {editingUserId && (
+              <button
+                type="button"
+                onClick={cancelEdit}
+                className="bg-gray-500 text-white px-4 py-2 rounded"
+              >
+                Cancel Edit
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={resetForm}
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+            >
+              Clear Form
             </button>
             <button
               type="button"
@@ -188,22 +282,40 @@ export default function UserManagement() {
                     <tr key={u._id} className="border-t">
                       <td className="p-2">{u.name}</td>
                       <td className="p-2">{u.email}</td>
-                      <td className="p-2">{u.role}</td>
+                      <td className="p-2">
+                        <span
+                          className={`px-2 py-1 rounded text-xs ${
+                            u.role === "supervisor"
+                              ? "bg-purple-100 text-purple-800"
+                              : u.role === "office"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-green-100 text-green-800"
+                          }`}
+                        >
+                          {u.role}
+                        </span>
+                      </td>
                       <td className="p-2">{u.office || "-"}</td>
                       <td className="p-2 flex gap-2">
                         <button
-                          onClick={() =>
-                            (window.location.href = `/supervisor/password/${u._id}`)
-                          }
-                          className="bg-green-600 text-white px-3 py-1 rounded"
+                          onClick={() => startEditUser(u)}
+                          className="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600"
                         >
-                          Change Password
+                          ✏️ Edit
+                        </button>
+                        <button
+                          onClick={() =>
+                            navigate(`/supervisor/password/${u._id}`)
+                          }
+                          className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                        >
+                          🔑 Password
                         </button>
                         <button
                           onClick={() => deleteUser(u._id)}
-                          className="bg-red-600 text-white px-3 py-1 rounded"
+                          className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
                         >
-                          Delete
+                          🗑️ Delete
                         </button>
                       </td>
                     </tr>

@@ -6,6 +6,7 @@ import {
   getAllUsers,
   deleteUser,
   updatePassword,
+  updateUser, // ADD THIS IMPORT
 } from "../controllers/authController.js";
 import { protect, supervisorOnly } from "../middleware/authMiddleware.js";
 
@@ -20,9 +21,12 @@ router.post("/login", login);
 // Supervisor fetches all users
 router.get("/users", protect, supervisorOnly, getAllUsers);
 
+// Supervisor updates user
+router.put("/users/:id", protect, supervisorOnly, updateUser); // ADD THIS LINE
+
 router.delete("/delete/:id", protect, supervisorOnly, deleteUser);
 
-// 🔥 ALSO add update password
+// Update password
 router.put("/password/:id", protect, supervisorOnly, updatePassword);
 
 export default router;
