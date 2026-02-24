@@ -5,6 +5,7 @@ export default function Login() {
   const { login } = useContext(AuthContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -12,7 +13,8 @@ export default function Login() {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
+    <div className="flex justify-center items-center h-screen bg-gray-100 ">
+      
       <form
         onSubmit={handleSubmit}
         className="bg-white shadow-lg rounded-2xl p-8 w-96"
@@ -26,6 +28,7 @@ export default function Login() {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
+        
         <input
           type="password"
           placeholder="Password"
@@ -34,6 +37,7 @@ export default function Login() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+
         <button
           type="submit"
           className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded w-full"

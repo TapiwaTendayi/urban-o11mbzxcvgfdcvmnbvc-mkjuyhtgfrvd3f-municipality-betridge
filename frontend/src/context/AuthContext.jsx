@@ -6,6 +6,7 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -14,6 +15,7 @@ export const AuthProvider = ({ children }) => {
     const savedUser = localStorage.getItem("user");
     if (token && savedUser) {
       setUser(JSON.parse(savedUser));
+      setToken(token);
     }
     setLoading(false);
   }, []);
@@ -24,6 +26,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       setUser(data.user);
+      setToken(data.token);
       navigate(`/dashboard/${data.user.role}`);
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
@@ -53,7 +56,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, token }}>
       {children}
     </AuthContext.Provider>
   );

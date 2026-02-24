@@ -1,17 +1,19 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState, useEffect, useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 export default function SidebarLayout({ children }) {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user, logout } = useContext(AuthContext);
+
 
   useEffect(() => {
-    const u = localStorage.getItem("user");
-    if (u) setUser(JSON.parse(u));
-  }, []);
+    
+  }, [user]);
 
-  const logout = () => {
-    localStorage.clear();
+ 
+  const handleLogout = () => {
+    logout();
     navigate("/login");
   };
 
@@ -68,7 +70,7 @@ export default function SidebarLayout({ children }) {
 
         <div className="mt-auto">
           <button
-            onClick={logout}
+            onClick={handleLogout}
             className="w-full bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
           >
             Logout

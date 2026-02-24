@@ -1,13 +1,13 @@
 // frontend/src/pages/OfficeDashboard.jsx
 import { useState, useEffect, useContext } from "react";
 import toast from "react-hot-toast";
-import axios from "axios";
+import api from "../utils/api";
 import generateReport from "../utils/reportGenerator";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
 export default function OfficeDashboard() {
-  const { user, logout } = useContext(AuthContext);
+  const { user, logout,token } = useContext(AuthContext);
   const [allRequests, setAllRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [displayedRequests, setDisplayedRequests] = useState([]);
@@ -26,7 +26,6 @@ export default function OfficeDashboard() {
   const [totalPages, setTotalPages] = useState(1);
 
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 10 }, (_, i) => currentYear - i); // 10 years back
@@ -48,9 +47,7 @@ export default function OfficeDashboard() {
 
   const fetchRequests = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/requests", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/requests");
       const myRequests = res.data.filter(
         (r) => r.requestedBy && r.requestedBy._id === user?.id
       );
@@ -116,11 +113,8 @@ export default function OfficeDashboard() {
     e.preventDefault();
     const toastId = toast.loading("Sending request...");
     try {
-      await axios.post(
-        "http://localhost:5000/api/requests/create",
-        { title, description },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post("/requests/create", { title, description });
+        
       toast.success("Request sent — you will be assisted shortly", {
         id: toastId,
       });
@@ -136,10 +130,8 @@ export default function OfficeDashboard() {
   const markResolved = async (requestId) => {
     const toastId = toast.loading("Marking as resolved...");
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/requests/resolve",
-        { requestId },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const res = await api.post("requests/resolve",{ requestId },
+       
       );
       toast.success(res.data.message || "Request marked as resolved", {
         id: toastId,

@@ -1,11 +1,14 @@
 // frontend/src/pages/SupervisorDashboard.jsx
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import toast from "react-hot-toast";
 import generateReport from "../utils/reportGenerator";
 import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 export default function SupervisorDashboard() {
+  const {  logout,token } = useContext(AuthContext);
   const [allRequests, setAllRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [displayedRequests, setDisplayedRequests] = useState([]);
@@ -24,7 +27,6 @@ export default function SupervisorDashboard() {
   const [totalPages, setTotalPages] = useState(1);
 
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
@@ -47,12 +49,10 @@ export default function SupervisorDashboard() {
   const fetchData = async () => {
     try {
       const [reqRes, userRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/requests", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get("http://localhost:5000/api/users", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
+        api.get("/requests"),
+        api.get("/users"), 
+          
+       
       ]);
 
       setAllRequests(reqRes.data);
@@ -116,11 +116,10 @@ export default function SupervisorDashboard() {
 
   const assignTask = async (requestId, studentId) => {
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/requests/assign",
-        { requestId, studentId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await api.post("/requests/assign", {
+        requestId,
+        studentId,
+      });
       toast.success(res.data.message || "Assigned");
       fetchData();
     } catch (err) {
@@ -130,7 +129,7 @@ export default function SupervisorDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.clear();
+    logout();
     navigate("/login");
   };
 

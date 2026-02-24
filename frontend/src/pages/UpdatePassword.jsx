@@ -1,22 +1,24 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useState, useEffect,useContext } from "react";
+import api from "../utils/api";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
+import { AuthContext } from "../context/AuthContext";
 
 export default function UpdatePassword() {
   const { id } = useParams();
   const navigate = useNavigate();
-
+  
+  const { token } = useContext(AuthContext);
   const [user, setUser] = useState(null);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const token = localStorage.getItem("token");
+  
 
   const fetchUser = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/auth/users", {
+      const res = await api.get("/auth/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -43,8 +45,8 @@ export default function UpdatePassword() {
 
     try {
       const t = toast.loading("Updating password...");
-      await axios.put(
-        `http://localhost:5000/api/auth/password/${id}`,
+      await api.put(
+        `/auth/password/${id}`,
         { newPassword: password },
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 function Home() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6 py-10">
+    <div className="min-h-screen  flex flex-col items-center justify-center px-6 py-10">
       {/* Main Card */}
       <div className="bg-white w-full max-w-5xl rounded-2xl shadow-lg p-10 flex flex-col md:flex-row items-center gap-10">
         {/* Left Side */}
@@ -15,7 +15,7 @@ function Home() {
             className="w-40 mb-6"
           />
 
-          <h1 className="text-4xl font-bold text-blue-700 mb-4">ITSolve</h1>
+          <h1 className="text-4xl font-bold text-blue-700  mb-4">ITSolve</h1>
 
           <p className="text-gray-600 text-lg leading-relaxed mb-6">
             A centralized platform for reporting and managing IT-related issues
@@ -36,7 +36,7 @@ function Home() {
           <div className="bg-blue-50 w-64 h-64 rounded-2xl flex items-center justify-center shadow">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="w-32 h-32 text-blue-600"
+              className="w-32 h-32 text-blue-600 "
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"

@@ -1,6 +1,6 @@
 // frontend/src/pages/UserManagement.jsx
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -21,9 +21,7 @@ export default function UserManagement() {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/auth/users", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/auth/users");
       setUsers(res.data);
     } catch (err) {
       console.error("Fetch users error:", err);
@@ -103,11 +101,9 @@ export default function UserManagement() {
 
       if (editingUserId) {
         // UPDATE existing user
-        await axios.put(
-          `http://localhost:5000/api/auth/users/${editingUserId}`,
-          userData,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await api.put(`/auth/users/${editingUserId}`, userData);
+          
+        
         toast.success("User updated successfully", { id: toastId });
       } else {
         // CREATE new user
@@ -115,9 +111,7 @@ export default function UserManagement() {
           toast.error("Password is required for new users", { id: toastId });
           return;
         }
-        await axios.post("http://localhost:5000/api/auth/register", userData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await api.post("/auth/register", userData);
         toast.success("User created successfully", { id: toastId });
       }
 
@@ -137,9 +131,7 @@ export default function UserManagement() {
     if (!confirm("Are you sure you want to delete this user?")) return;
     try {
       const idToast = toast.loading("Deleting user...");
-      await axios.delete(`http://localhost:5000/api/auth/delete/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/auth/delete/${id}`);
       toast.dismiss(idToast);
       toast.success("User deleted");
       fetchUsers();

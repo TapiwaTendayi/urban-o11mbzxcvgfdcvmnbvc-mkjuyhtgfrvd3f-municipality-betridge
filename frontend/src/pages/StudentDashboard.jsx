@@ -1,11 +1,13 @@
 // frontend/src/pages/StudentDashboard.jsx
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useState, useEffect, useContext } from "react";
+import api from "../utils/api";
 import toast from "react-hot-toast";
 import generateReport from "../utils/reportGenerator";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
 export default function StudentDashboard() {
+  const {  logout,token } = useContext(AuthContext);
   const [allRequests, setAllRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [displayedRequests, setDisplayedRequests] = useState([]);
@@ -21,8 +23,8 @@ export default function StudentDashboard() {
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
 
-  const token = localStorage.getItem("token");
   const navigate = useNavigate();
+
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
@@ -44,9 +46,7 @@ export default function StudentDashboard() {
 
   const fetchRequests = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/requests", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/requests");
       setAllRequests(res.data);
       setFilteredRequests(res.data);
     } catch (err) {
@@ -101,8 +101,9 @@ export default function StudentDashboard() {
     setDisplayedRequests(itemsForPage);
   }, [filteredRequests, currentPage, itemsPerPage]);
 
+  
   const handleLogout = () => {
-    localStorage.clear();
+    logout();
     navigate("/login");
   };
 

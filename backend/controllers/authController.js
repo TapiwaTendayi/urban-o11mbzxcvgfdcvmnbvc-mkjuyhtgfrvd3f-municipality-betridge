@@ -7,9 +7,9 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-/* ============================================================
+/* 
    REGISTER USER (Supervisor-only)
-============================================================ */
+ */
 export const register = async (req, res) => {
   try {
     // 🔒 Only supervisors can create users

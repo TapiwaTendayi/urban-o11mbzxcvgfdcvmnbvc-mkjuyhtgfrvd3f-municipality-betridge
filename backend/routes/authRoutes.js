@@ -6,7 +6,7 @@ import {
   getAllUsers,
   deleteUser,
   updatePassword,
-  updateUser, // ADD THIS IMPORT
+  updateUser,
 } from "../controllers/authController.js";
 import { protect, supervisorOnly } from "../middleware/authMiddleware.js";
 
